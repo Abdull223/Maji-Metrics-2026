@@ -175,7 +175,7 @@ with t1:
     
     map_df = pd.DataFrame({'LAT': lats, 'LON': lons, 'RISK': risks, 'SITE': site_names})
     
-    # FIX: Using px.scatter_map and open-street-map to avoid Mapbox attribute/token errors on Streamlit Cloud
+    # FIX: Using px.scatter_map and map_style to match MapLibre engine compatibility
     fig_map = px.scatter_map(map_df, 
                              lat="LAT", 
                              lon="LON", 
@@ -186,7 +186,7 @@ with t1:
                              zoom=8, 
                              height=500)
     
-    fig_map.update_layout(mapbox_style="open-street-map", margin={"r":0,"t":0,"l":0,"b":0})
+    fig_map.update_layout(map_style="open-street-map", margin={"r":0,"t":0,"l":0,"b":0})
     st.plotly_chart(fig_map, use_container_width=True)
     
     st.markdown(f"""
