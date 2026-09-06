@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -308,5 +307,3 @@ with t5:
 
 st.divider()
 st.markdown("<center><i>Maji Metrics v10.0 | National 47-County Portfolio | Capstone 2026</i></center>", unsafe_allow_html=True)
-
-```
