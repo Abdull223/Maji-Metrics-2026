@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -5,6 +6,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from datetime import datetime
 import pytz
+import folium
+from streamlit_folium import st_folium
 
 # --- 1. SETTINGS & THEME ---
 st.set_page_config(page_title="MAJI METRICS | Vision 2030", layout="wide", page_icon="🇰🇪")
@@ -160,55 +163,49 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # --- 6. VISUALIZATIONS & COMPREHENSIVE EXPLANATIONS ---
-t1, t2, t3, t4, t5 = st.tabs(["🌍 GEOSPATIAL", "📈 FINANCIALS", "📉 TRENDS", "🤝 IMPACT AUDIT", "📄 STRATEGIC REPORT"])
+t1, t2, t3, t4, t5 = st.tabs(["🌍 SATELLITE GEOSPATIAL", "📈 FINANCIALS", "📉 TRENDS", "🤝 IMPACT AUDIT", "📄 STRATEGIC REPORT"])
 
 with t1:
-    st.subheader(f"Distributed Asset Network: {selected_county}")
+    st.subheader(f"High-Resolution Satellite Network: {selected_county}")
     c_info = county_data[selected_county]
     
-    # --- GENERATE DISTRIBUTED POINTS ---
+    # Initialize Folium Map with Esri World Imagery (Real Satellite View)
+    m = folium.Map(
+        location=c_info["coords"],
+        zoom_start=9,
+        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attr='Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community'
+    )
+    
+    # Generate distributed asset points
     num_assets = 12
+    np.random.seed(42)
     lats = [c_info["coords"][0] + np.random.uniform(-0.15, 0.15) for _ in range(num_assets)]
     lons = [c_info["coords"][1] + np.random.uniform(-0.15, 0.15) for _ in range(num_assets)]
     risks = [max(5.0, min(100.0, risk_prob + np.random.normal(0, 10))) for _ in range(num_assets)]
-    site_names = [f"Asset Site {i+1} ({water_source})" for i in range(num_assets)]
     
-    map_df = pd.DataFrame({'LAT': lats, 'LON': lons, 'RISK': risks, 'SITE': site_names})
-    
-    # Using scatter_geo with self-contained vector projection to provide a reliable, lively regional map
-    fig_map = px.scatter_geo(map_df, 
-                             lat="LAT", 
-                             lon="LON", 
-                             size="RISK", 
-                             color="RISK", 
-                             hover_name="SITE",
-                             color_continuous_scale="Reds", 
-                             projection="mercator",
-                             height=500)
-    
-    fig_map.update_geos(
-        center={"lat": c_info["coords"][0], "lon": c_info["coords"][1]},
-        projection_scale=15,
-        showland=True, landcolor="#1e293b",
-        showocean=True, oceancolor="#0f172a",
-        showcountries=True, countrycolor="#38bdf8",
-        showcoastlines=True, coastlinecolor="#38bdf8"
-    )
-    
-    fig_map.update_layout(
-        margin={"r":0,"t":0,"l":0,"b":0},
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)"
-    )
-    
-    st.plotly_chart(fig_map, use_container_width=True)
+    for i in range(num_assets):
+        r_val = risks[i]
+        color = '#ef4444' if r_val > 70 else '#f59e0b' if r_val > 40 else '#10b981'
+        folium.CircleMarker(
+            location=[lats[i], lons[i]],
+            radius=max(6, int(r_val / 6)),
+            popup=f"<b>Asset Site {i+1} ({water_source})</b><br>Risk: {r_val:.1f}%<br>Status: {'CRITICAL' if r_val > 70 else 'AT RISK' if r_val > 40 else 'STABLE'}",
+            color='#ffffff',
+            weight=1.5,
+            fill=True,
+            fill_color=color,
+            fill_opacity=0.85
+        ).add_to(m)
+        
+    st_folium(m, width=None, height=500, use_container_width=True)
     
     st.markdown(f"""
     <div class="explanation-text">
-        <b>Dynamic Interpretation (Distributed Map):</b><br>
-        This map visualizes <b>{num_assets} simulated infrastructure points</b> across {selected_county}. 
-        Points with higher saturation (darker red) indicate localized critical failures where {soil_type} and {water_source} age are hitting 
-        peak degradation. Larger bubbles indicate sites where a breakdown would impact the highest density of the <b>{pop_at_risk:,}</b> people at risk.
+        <b>Dynamic Interpretation (Satellite Imagery):</b><br>
+        This live satellite map visualizes <b>{num_assets} distributed infrastructure points</b> across {selected_county}. 
+        Color-coded markers (Red = Critical, Amber = At Risk, Green = Stable) highlight localized failures where <b>{soil_type}</b> and asset age intersect. 
+        Click any marker to inspect exact risk metrics impacting the local community water grid.
     </div>
     """, unsafe_allow_html=True)
 
@@ -307,3 +304,5 @@ with t5:
 
 st.divider()
 st.markdown("<center><i>Maji Metrics v10.0 | National 47-County Portfolio | Capstone 2026</i></center>", unsafe_allow_html=True)
+
+```
