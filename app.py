@@ -165,7 +165,7 @@ st.markdown(f"""
 t1, t2, t3, t4, t5 = st.tabs(["🌍 SATELLITE GEOSPATIAL", "📈 FINANCIALS", "📉 TRENDS", "🤝 IMPACT AUDIT", "📄 STRATEGIC REPORT"])
 
 with t1:
-    st.subheader(f"High-Resolution Satellite Network: {selected_county}")
+    st.subheader(f"High-Resolution Satellite Network: {selected_county} County")
     c_info = county_data[selected_county]
     
     # Initialize Folium Map with Esri World Imagery (Real Satellite View)
@@ -176,7 +176,15 @@ with t1:
         attr='Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community'
     )
     
-    # Generate distributed asset points
+    # Add County Hub Center Marker with Label
+    folium.Marker(
+        location=c_info["coords"],
+        popup=f"<b>{selected_county} County Regional Center</b><br>Total Population Served: {c_info['pop_served']:,}",
+        tooltip=f"📍 {selected_county} Regional Hub",
+        icon=folium.Icon(color="blue", icon="info-sign")
+    ).add_to(m)
+    
+    # Generate distributed asset points with explicit tooltips showing site names
     num_assets = 12
     np.random.seed(42)
     lats = [c_info["coords"][0] + np.random.uniform(-0.15, 0.15) for _ in range(num_assets)]
@@ -186,10 +194,13 @@ with t1:
     for i in range(num_assets):
         r_val = risks[i]
         color = '#ef4444' if r_val > 70 else '#f59e0b' if r_val > 40 else '#10b981'
+        site_label = f"Site #{i+1} ({water_source})"
+        
         folium.CircleMarker(
             location=[lats[i], lons[i]],
             radius=max(6, int(r_val / 6)),
-            popup=f"<b>Asset Site {i+1} ({water_source})</b><br>Risk: {r_val:.1f}%<br>Status: {'CRITICAL' if r_val > 70 else 'AT RISK' if r_val > 40 else 'STABLE'}",
+            popup=f"<b>{site_label}</b><br>Location: {selected_county}<br>Risk Level: {r_val:.1f}%<br>Status: {'CRITICAL' if r_val > 70 else 'AT RISK' if r_val > 40 else 'STABLE'}",
+            tooltip=f"{site_label} — {r_val:.1f}% Risk",
             color='#ffffff',
             weight=1.5,
             fill=True,
@@ -201,10 +212,9 @@ with t1:
     
     st.markdown(f"""
     <div class="explanation-text">
-        <b>Dynamic Interpretation (Satellite Imagery):</b><br>
-        This live satellite map visualizes <b>{num_assets} distributed infrastructure points</b> across {selected_county}. 
-        Color-coded markers (Red = Critical, Amber = At Risk, Green = Stable) highlight localized failures where <b>{soil_type}</b> and asset age intersect. 
-        Click any marker to inspect exact risk metrics impacting the local community water grid.
+        <b>Dynamic Interpretation (Satellite Imagery & Site Labels):</b><br>
+        This live satellite map features <b>{selected_county} County Regional Hub</b> (blue pin) alongside <b>{num_assets} distributed {water_source} sites</b>. 
+        Hover over any circle marker to instantly view its <b>Site Name and Risk Percentage</b>, or click it for deep-dive status updates.
     </div>
     """, unsafe_allow_html=True)
 
