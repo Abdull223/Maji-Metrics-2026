@@ -1,3 +1,4 @@
+```python
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -16,13 +17,13 @@ st.markdown("""
     [data-testid="stMetricValue"] { 
         color: #ffffff !important; 
         font-weight: 800 !important; 
-        font-size: 1.8rem !important; 
+        font-size: 1.5rem !important; 
         white-space: normal !important; 
         word-break: break-word !important;
         line-height: 1.2 !important;
     }
     
-    [data-testid="stMetricLabel"] { color: #ffd700 !important; font-size: 1rem !important; font-weight: 600; }
+    [data-testid="stMetricLabel"] { color: #ffd700 !important; font-size: 0.95rem !important; font-weight: 600; }
     h1, h2, h3 { color: #ffd700 !important; }
     .report-box { background: #0f172a; border: 1px solid #38bdf8; padding: 35px; border-radius: 12px; font-family: 'Courier New', monospace; color: #38bdf8; line-height: 1.7; border-left: 5px solid #ffd700; white-space: pre-wrap; }
     .vision-card { background: rgba(255, 215, 0, 0.1); border-left: 5px solid #ffd700; padding: 15px; margin: 10px 0; border-radius: 5px; }
@@ -175,25 +176,38 @@ with t1:
     
     map_df = pd.DataFrame({'LAT': lats, 'LON': lons, 'RISK': risks, 'SITE': site_names})
     
-    # FIX: Using px.scatter_map and map_style to match MapLibre engine compatibility
-    fig_map = px.scatter_map(map_df, 
+    # Using scatter_geo with self-contained vector projection to provide a reliable, lively regional map
+    fig_map = px.scatter_geo(map_df, 
                              lat="LAT", 
                              lon="LON", 
                              size="RISK", 
                              color="RISK", 
                              hover_name="SITE",
                              color_continuous_scale="Reds", 
-                             zoom=8, 
+                             projection="mercator",
                              height=500)
     
-    fig_map.update_layout(map_style="open-street-map", margin={"r":0,"t":0,"l":0,"b":0})
+    fig_map.update_geos(
+        center={"lat": c_info["coords"][0], "lon": c_info["coords"][1]},
+        projection_scale=15,
+        showland=True, landcolor="#1e293b",
+        showocean=True, oceancolor="#0f172a",
+        showcountries=True, countrycolor="#38bdf8",
+        showcoastlines=True, coastlinecolor="#38bdf8"
+    )
+    
+    fig_map.update_layout(
+        margin={"r":0,"t":0,"l":0,"b":0},
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)"
+    )
+    
     st.plotly_chart(fig_map, use_container_width=True)
     
     st.markdown(f"""
     <div class="explanation-text">
         <b>Dynamic Interpretation (Distributed Map):</b><br>
-        This map now visualizes <b>{num_assets} simulated infrastructure points</b> across {selected_county}. 
-        Instead of a single regional average, you are seeing <b>intra-county variance</b>. 
+        This map visualizes <b>{num_assets} simulated infrastructure points</b> across {selected_county}. 
         Points with higher saturation (darker red) indicate localized critical failures where {soil_type} and {water_source} age are hitting 
         peak degradation. Larger bubbles indicate sites where a breakdown would impact the highest density of the <b>{pop_at_risk:,}</b> people at risk.
     </div>
@@ -294,3 +308,5 @@ with t5:
 
 st.divider()
 st.markdown("<center><i>Maji Metrics v10.0 | National 47-County Portfolio | Capstone 2026</i></center>", unsafe_allow_html=True)
+
+```
