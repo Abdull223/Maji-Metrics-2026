@@ -166,28 +166,27 @@ with t1:
     st.subheader(f"Distributed Asset Network: {selected_county}")
     c_info = county_data[selected_county]
     
-    # --- NEW: GENERATE DISTRIBUTED POINTS ---
+    # --- GENERATE DISTRIBUTED POINTS ---
     num_assets = 12
-    # Create small random offsets around the county center to simulate different borehole/well locations
     lats = [c_info["coords"][0] + np.random.uniform(-0.15, 0.15) for _ in range(num_assets)]
     lons = [c_info["coords"][1] + np.random.uniform(-0.15, 0.15) for _ in range(num_assets)]
-    # Randomize risk slightly for each site based on the global risk probability
     risks = [max(5.0, min(100.0, risk_prob + np.random.normal(0, 10))) for _ in range(num_assets)]
     site_names = [f"Asset Site {i+1} ({water_source})" for i in range(num_assets)]
     
     map_df = pd.DataFrame({'LAT': lats, 'LON': lons, 'RISK': risks, 'SITE': site_names})
     
-    fig_map = px.scatter_mapbox(map_df, 
-                                lat="LAT", 
-                                lon="LON", 
-                                size="RISK", 
-                                color="RISK", 
-                                hover_name="SITE",
-                                color_continuous_scale="Reds", 
-                                zoom=8, 
-                                height=500)
+    # FIX: Using px.scatter_map and open-street-map to avoid Mapbox attribute/token errors on Streamlit Cloud
+    fig_map = px.scatter_map(map_df, 
+                             lat="LAT", 
+                             lon="LON", 
+                             size="RISK", 
+                             color="RISK", 
+                             hover_name="SITE",
+                             color_continuous_scale="Reds", 
+                             zoom=8, 
+                             height=500)
     
-    fig_map.update_layout(mapbox_style="carto-darkmatter", margin={"r":0,"t":0,"l":0,"b":0})
+    fig_map.update_layout(mapbox_style="open-street-map", margin={"r":0,"t":0,"l":0,"b":0})
     st.plotly_chart(fig_map, use_container_width=True)
     
     st.markdown(f"""
